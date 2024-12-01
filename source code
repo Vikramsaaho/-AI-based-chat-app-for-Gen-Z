@@ -1,0 +1,56 @@
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
+class ChatScreen extends StatefulWidget {
+  @override
+  _ChatScreenState createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends State<ChatScreen> {
+  final TextEditingController _controller = TextEditingController();
+  String response = "";
+
+  Future<void> getResponse(String message) async {
+    final uri = Uri.parse('https://api.openai.com/v1/chat/completions');
+    final headers = {
+      'Authorization': 'Bearer YOUR_API_KEY',
+      'Content-Type': 'application/json',
+    };
+    final body = {
+      "model": "gpt-4",
+      "messages": [
+        {"role": "user", "content": message}
+      ]
+    };
+
+    final res = await http.post(uri, headers: headers, body: jsonEncode(body));
+    setState(() {
+      response = jsonDecode(res.body)['choices'][0]['message']['content'];
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('AI Chat')),
+      body: Column(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(response),
+            ),
+          ),
+          TextField(
+            controller: _controller,
+            decoration: InputDecoration(labelText: 'Send a message'),
+            onSubmitted: (text) {
+              getResponse(text);
+              _controller.clear();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
